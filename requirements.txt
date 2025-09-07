@@ -1,0 +1,9 @@
+streamlit
+pandas
+numpy
+reportlab
+weasyprint
+requests
+transformers
+torch
+pydantic
