@@ -54,21 +54,20 @@ elif page == "Meal Plan":
         wake_time = st.time_input("Wake-up Time")
         gym_time = st.time_input("Gym Time")
         food_list = st.text_area("Enter foods (comma separated)", "chicken, rice, oats, eggs, broccoli").split(",")
+        source = st.radio("Select Data Source", ["Walmart", "Costco"])
         generate_btn = st.form_submit_button("Generate Plan")
 
     if generate_btn:
-        from calorie_calc import calculate_tdee, calculate_target_calories, calculate_macros
+        from calorie_calc import calculate_macros
         from meal_plan import build_meal_plan
 
-        # For now, let’s use static TDEE/macros from Phase 2 (later we’ll connect this directly)
-        tdee = 2000
-        target_calories = 1800
+        target_calories = 1800  # Later: fetch from Calorie Calculator page
         macros = calculate_macros(target_calories)
 
         plan = build_meal_plan(
             target_calories, macros,
             wake_time.strftime("%H:%M"), gym_time.strftime("%H:%M"),
-            [f.strip() for f in food_list]
+            [f.strip() for f in food_list], preferred_source=source.lower()
         )
 
         if plan:

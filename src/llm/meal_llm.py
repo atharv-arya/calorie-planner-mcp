@@ -1,48 +1,74 @@
-"""
-Meal Planning LLM (via Hugging Face Inference API)
--------------------------------------------------
-Generates meal plans using Hugging Face-hosted LLMs and MCP food data.
-"""
-
+import asyncio
 import os
-import json
-from huggingface_hub import InferenceClient
 from dotenv import load_dotenv
-load_dotenv()
+from langchain_groq import ChatGroq
+from mcp_use import MCPAgent, MCPClient
 
-HF_API_KEY = os.getenv("HF_API_KEY")
-MODEL_ID = "mistralai/Mistral-7B-Instruct-v0.2" 
-
-client = InferenceClient(model=MODEL_ID, token=HF_API_KEY)
-
-def generate_meal_plan_llm(target_calories, macros, wake_time, gym_time, food_data, meals_per_day=5, days=7):
+async def run_meal_chat(target_calories, macros):
     """
-    Ask Hugging Face LLM to generate a meal plan using MCP food data.
+    Interactive chatbot for meal planning.
+    Auto-uses TDEE + macros, asks user wake/gym times, fetches foods via MCP.
     """
+    # Load environment
+    load_dotenv()
+    os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY")
 
-    prompt = f"""
-    You are a professional nutrition planner. Create a {days}-day meal plan.
+    # Config file for Costco/Walmart MCP
+    config_file_path = "mcp_config.json"
 
-    - Target calories: {target_calories} kcal/day
-    - Macros: {macros}
-    - Meals per day: {meals_per_day}
-    - Wake-up time: {wake_time}
-    - Gym time: {gym_time}
-    - Available foods with nutrition per 100g: {json.dumps(food_data, indent=2)}
+    # Init MCP + LLM
+    mcp_client = MCPClient.from_config_file(config_file_path)
+    llm = ChatGroq(model="meta-llama/llama-4-maverick-17b-128e-instruct")
 
-    Output as JSON list with fields: Day, Time, Meal, Food, Quantity (g), Calories.
-    Example:
-    [
-      {{"Day": "Day 1", "Time": "08:00", "Meal": "Breakfast", "Food": "Oats", "Quantity (g)": 50, "Calories": 190}}
-    ]
-    """
+    # Agent with memory enabled
+    agent = MCPAgent(
+        llm=llm,
+        client=mcp_client,
+        max_steps=20,
+        memory_enabled=True,
+    )
 
-    response = client.text_generation(prompt, max_new_tokens=800, temperature=0.7)
+    print("\n------- Meal Planning Chatbot Started -------")
+    print("I already know your target calories & macros.")
+    print("I'll ask for wake-up time, gym time, and foods.")
+    print("Type 'quit' to end the session.")
+    print("Type 'clear' to reset memory.")
+    print("------------------------------------------------")
 
     try:
-        start = response.find("[")
-        end = response.rfind("]") + 1
-        return json.loads(response[start:end])
-    except Exception as e:
-        print("LLM parsing error:", e)
-        return []
+        while True:
+            user_input = input("\nYou: ")
+
+            if user_input.lower() == "quit":
+                print("Chat session ending...")
+                break
+            if user_input.lower() == "clear":
+                print("Conversation history cleared.")
+                continue
+
+            try:
+                response = await agent.run(
+                    f"""
+                    Context:
+                    - Target calories: {target_calories}
+                    - Macros: {macros}
+                    - You can query Costco/Walmart MCP servers for foods.
+                    Task:
+                    Continue this meal planning chat.
+                    {user_input}
+                    """
+                )
+                print("\nAssistant:", response)
+            except Exception as e:
+                print(f"\nError: {e}")
+
+    finally:
+        if mcp_client and mcp_client.sessions:
+            await mcp_client.close_all_sessions()
+
+if __name__ == "__main__":
+    # Example: pull from Streamlit session state later
+    target_calories = 1800
+    macros = {"Protein (g)": 135, "Carbs (g)": 180, "Fat (g)": 60}
+
+    asyncio.run(run_meal_chat(target_calories, macros))

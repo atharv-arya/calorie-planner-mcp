@@ -3,7 +3,7 @@
 A Streamlit app that helps users:
 1. Calculate maintenance and deficit calories.
 2. Generate a 7-day meal plan with balanced macros.
-3. Create a budget-optimized grocery list from Costco, Walmart, and Wee.
+3. Create a budget-optimized grocery list from Costco and Walmart.
 4. Export both plans as styled PDFs.
 
 ## Features
@@ -20,7 +20,7 @@ A Streamlit app that helps users:
 - Streamlit
 - HuggingFace Transformers
 - WeasyPrint (PDF generation)
-- MCP servers (Costco, Walmart, Wee)
+- MCP servers (Costco and Walmart)
 
 ## Setup
 ```bash

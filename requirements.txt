@@ -9,3 +9,6 @@ torch
 pydantic
 huggingface_hub
 python-dotenv
+apify_client
+langchain_groq
+mcp_use
