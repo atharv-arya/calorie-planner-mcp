@@ -1,8 +1,8 @@
 import streamlit as st
 
-st.set_page_config(page_title="Calorie Planner MCP", layout="wide")
+st.set_page_config(page_title="Calorie Planner", layout="wide")
 
-st.title("🥗 Calorie Planner MCP")
+st.title("🥗 Calorie Planner")
 st.markdown("Welcome! This tool will help you calculate your calories, build meal plans, and optimize your grocery shopping.")
 
 st.sidebar.header("Navigation")
