@@ -1,3 +1,4 @@
+# Note: Have a hit a road block with finding accessible Walmart and Costco MCP Server for now.
 # Calorie Planner MCP 🥗💪
 
 A Streamlit app that helps users:
