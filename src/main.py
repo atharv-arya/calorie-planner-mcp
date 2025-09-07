@@ -48,6 +48,34 @@ elif page == "Calorie Calculator":
 
 
 elif page == "Meal Plan":
-    st.write("📅 Meal plan page")
+    st.header("📅 Meal Plan Generator")
+
+    with st.form("meal_plan_form"):
+        wake_time = st.time_input("Wake-up Time")
+        gym_time = st.time_input("Gym Time")
+        food_list = st.text_area("Enter foods (comma separated)", "chicken, rice, oats, eggs, broccoli").split(",")
+        generate_btn = st.form_submit_button("Generate Plan")
+
+    if generate_btn:
+        from calorie_calc import calculate_tdee, calculate_target_calories, calculate_macros
+        from meal_plan import build_meal_plan
+
+        # For now, let’s use static TDEE/macros from Phase 2 (later we’ll connect this directly)
+        tdee = 2000
+        target_calories = 1800
+        macros = calculate_macros(target_calories)
+
+        plan = build_meal_plan(
+            target_calories, macros,
+            wake_time.strftime("%H:%M"), gym_time.strftime("%H:%M"),
+            [f.strip() for f in food_list]
+        )
+
+        if plan:
+            st.subheader("Generated 7-Day Meal Plan")
+            st.dataframe(plan)
+        else:
+            st.error("⚠️ Could not generate meal plan. Check MCP or LLM setup.")
+
 elif page == "Grocery Plan":
     st.write("🛒 Grocery plan page")
